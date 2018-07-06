@@ -84,7 +84,7 @@ jobs:
 
       - run:
           name: Authenticate with registry
-          command: echo "//registry.npmjs.org/:_authToken=$npm_TOKEN" > ~/project/.npmrc
+          command: echo "//registry.npmjs.org/:_authToken=$NPM_TOKEN" > .npmrc
 
       - run: node scripts/release/update-versions.js --next
       - run: node scripts/release/release-npm.js --next
