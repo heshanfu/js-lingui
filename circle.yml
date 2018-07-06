@@ -29,6 +29,7 @@ workflows:
               only:
                 - master
                 - stable-2.x
+                - new-build
 
 jobs:
   build:
