@@ -55,7 +55,7 @@ jobs:
       - persist_to_workspace:
           root: build
           paths:
-            - '*'
+            - packages
 
   test-node8:
     docker:
@@ -65,7 +65,7 @@ jobs:
       - checkout
 
       - attach_workspace:
-          at: project/build
+          at: build
 
       - restore_cache:
           key: node-modules-{{ checksum "yarn.lock" }}
