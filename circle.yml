@@ -53,19 +53,19 @@ jobs:
       - run: node scripts/build/
 
       - persist_to_workspace:
-          root: '~'
+          root: project
           paths:
-            - project/build
+            - build
 
   test-node8:
     docker:
       - image: circleci/node:8
 
     steps:
-      - attach_workspace:
-          at: '~'
-
       - checkout
+
+      - attach_workspace:
+          at: project
 
       - restore_cache:
           key: node-modules-{{ checksum "yarn.lock" }}
