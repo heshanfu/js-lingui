@@ -1,25 +1,5 @@
 version: 2
 
-test-node-template:
-  steps:
-    - checkout
-
-    - attach_workspace:
-        at: build
-
-    - restore_cache:
-        key: node-modules-{{ checksum "yarn.lock" }}
-
-    - run:
-        name: Install dependencies
-        command: yarn install
-
-    - run:
-        name: Install build tools
-        command: sudo yarn global add codecov yalc
-
-    - run: node scripts/test.js --skip-build
-
 workflows:
   version: 2
   test_n_deploy:
@@ -36,14 +16,18 @@ workflows:
       - test-linter:
           requires:
             - build
-      - test-node8:
+      - test-node-latest:
+          requires:
+            - build
+      - test-node-8:
           requires:
             - build
 
       - publish:
           requires:
             - test-linter
-            - test-node8
+            - test-node-latest
+            - test-node-8
           filters:
             branches:
               only:
@@ -78,21 +62,59 @@ jobs:
           paths:
             - packages
 
-  test-node:
+  test-node-latest:
     docker:
-      - image: circleci/node:8
+      - image: circleci/node:latest
 
-    steps: <
+    steps:
+      - checkout
+
+      - attach_workspace:
+          at: build
+
+      - restore_cache:
+          key: node-modules-{{ checksum "yarn.lock" }}
+
+      - run:
+          name: Install dependencies
+          command: yarn install
+
+      - run:
+          name: Install build tools
+          command: sudo yarn global add codecov yalc
+
+      - run: node scripts/test.js --skip-build
+
       - run:
           name: Send coverage report
-          command: |
-              if [ "${NODEJS}" == "8" ]; then
-                codecov
-              fi
+          command: codecov
 
       - store_test_results:
           path: ./results/
           when: always
+
+  test-node-8:
+    docker:
+      - image: circleci/node:8
+
+    steps:
+      - checkout
+
+      - attach_workspace:
+          at: build
+
+      - restore_cache:
+          key: node-modules-{{ checksum "yarn.lock" }}
+
+      - run:
+          name: Install dependencies
+          command: yarn install
+
+      - run:
+          name: Install build tools
+          command: sudo yarn global add codecov yalc
+
+      - run: node scripts/test.js --skip-build
 
   publish:
     docker:
