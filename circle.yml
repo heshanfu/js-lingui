@@ -4,8 +4,6 @@ workflows:
   version: 2
   test_n_deploy:
     jobs:
-      - test-linter
-      - test-node8
       - build-docs:
           filters:
             branches:
@@ -13,17 +11,32 @@ workflows:
                 - master
                 - stable-2.x
 
+      - build
+
+      - test-linter:
+          requires:
+            - build
+      - test-node8:
+          requires:
+            - build
+
+      - publish:
+          requires:
+            - test-linter
+            - test-node8
+          filters:
+            branches:
+              only:
+                - master
+                - stable-2.x
+
 jobs:
-  test-node8: &test-template
+  build:
     docker:
       - image: circleci/node:8
 
     steps:
       - checkout
-
-      - run:
-          name: Install build tools
-          command: sudo yarn global add codecov yalc
 
       - restore_cache:
           key: node-modules-{{ checksum "yarn.lock" }}
@@ -37,12 +50,40 @@ jobs:
           paths:
               - node_modules
 
-      - run: node scripts/test.js
+      - run: node scripts/build/
+
+      - persist_to_workspace:
+          root: '~'
+          paths:
+            - build
+
+  test-node8:
+    docker:
+      - image: circleci/node:8
+
+    steps:
+      - attach_to_workspace:
+          at: '~'
+
+      - checkout
+
+      - restore_cache:
+          key: node-modules-{{ checksum "yarn.lock" }}
+
+      - run:
+          name: Install dependencies
+          command: yarn install
+
+      - run:
+          name: Install build tools
+          command: sudo yarn global add codecov yalc
+
+      - run: node scripts/test.js --skip-build
 
       - run:
           name: Send coverage report
           command: |
-              if [ "${NODEJS}" == "4" ]; then
+              if [ "${NODEJS}" == "8" ]; then
                 codecov
               fi
 
@@ -50,11 +91,26 @@ jobs:
           path: ./results/
           when: always
 
-#  test-node6:
-#    <<: *test-template
-#
-#    docker:
-#      - image: circleci/node:6
+  publish:
+    docker:
+      - image: circleci/node:8
+
+    steps:
+      - attach_to_workspace:
+          at: '~'
+
+      - checkout
+
+      - restore_cache:
+          key: node-modules-{{ checksum "yarn.lock" }}
+
+      - run:
+          name: Install dependencies
+          command: yarn install
+
+      - run: node scripts/release/update-versions.js
+
+      - run: node scripts/release/release-npm.js --next
 
   test-linter:
     docker:
@@ -63,21 +119,12 @@ jobs:
     steps:
       - checkout
 
-      - run:
-          name: Install build tools
-          command: sudo yarn global add codecov yalc
-
       - restore_cache:
           key: node-modules-{{ checksum "yarn.lock" }}
 
       - run:
           name: Install dependencies
           command: yarn install
-
-      - save_cache:
-          key: node-modules-{{ checksum "yarn.lock" }}
-          paths:
-              - node_modules
 
       - run: yarn run lint
 
