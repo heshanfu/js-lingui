@@ -1,5 +1,25 @@
 version: 2
 
+test-node-template:
+  steps:
+    - checkout
+
+    - attach_workspace:
+        at: build
+
+    - restore_cache:
+        key: node-modules-{{ checksum "yarn.lock" }}
+
+    - run:
+        name: Install dependencies
+        command: yarn install
+
+    - run:
+        name: Install build tools
+        command: sudo yarn global add codecov yalc
+
+    - run: node scripts/test.js --skip-build
+
 workflows:
   version: 2
   test_n_deploy:
@@ -58,29 +78,11 @@ jobs:
           paths:
             - packages
 
-  test-node8:
+  test-node:
     docker:
       - image: circleci/node:8
 
-    steps:
-      - checkout
-
-      - attach_workspace:
-          at: build
-
-      - restore_cache:
-          key: node-modules-{{ checksum "yarn.lock" }}
-
-      - run:
-          name: Install dependencies
-          command: yarn install
-
-      - run:
-          name: Install build tools
-          command: sudo yarn global add codecov yalc
-
-      - run: node scripts/test.js --skip-build
-
+    steps: <
       - run:
           name: Send coverage report
           command: |
