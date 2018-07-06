@@ -93,13 +93,13 @@ jobs:
 
   publish:
     docker:
-      - image: circleci/node:8
+      - image: circleci/node:latest
 
     steps:
-      - attach_workspace:
-          at: '~'
-
       - checkout
+
+      - attach_workspace:
+          at: build
 
       - restore_cache:
           key: node-modules-{{ checksum "yarn.lock" }}
@@ -108,7 +108,7 @@ jobs:
           name: Install dependencies
           command: yarn install
 
-      - run: node scripts/release/update-versions.js
+      - run: node scripts/release/update-versions.js --next
 
       - run: node scripts/release/release-npm.js --next
 
