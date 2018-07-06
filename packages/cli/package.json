@@ -1,6 +1,6 @@
 {
   "name": "@lingui/cli",
-  "version": "2.2.0",
+  "version": "0.0.0-managed-by-release-script",
   "description": "CLI for working wit message catalogs",
   "keywords": [
     "cli",

@@ -55,7 +55,7 @@ jobs:
       - persist_to_workspace:
           root: '~'
           paths:
-            - build
+            - project/build
 
   test-node8:
     docker:
